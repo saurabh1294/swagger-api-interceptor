@@ -1,0 +1,325 @@
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link rel="icon" href="images/swagger.ico" type="image/x-icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<h1 style="text-align:center"><u>Swagger Interceptor demo</u></h1>
+
+<div class="container" style="margin-top: 20px;">
+
+	<div class="row">
+		<div class="col-lg-6 col-12 col-sm-6">
+			<h4>Swagger input form</h4>
+		</div>
+		<div class="col-lg-6 col-12 col-sm-6 hidden-xs hidden-sm">
+			<h4>Search Result by API endpoint in swagger</h4>
+		</div>
+	</div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="input-group">
+                <label class="input-group-btn">
+                    <span class="btn btn-primary">
+                        Browse&hellip; <input type="file" style="display: none;" multiple>
+                    </span>
+                </label>
+                <input type="text" class="form-control" readonly>
+            </div>
+            <span class="help-block">
+                Browse and select swagger file to be intercepted
+            </span>
+			<h2>OR</h2>
+			<span class="help-block">
+                Paste swagger file here
+            </span>
+			<div class="col-sm-12">
+				<div class="form-group">
+					<textarea class="form-control" id="swaggerYAML" rows="5" style="color:orange"></textarea>
+				</div>
+			</div>
+
+            <div class="form-group">
+                <!-- API endpoint -->
+                <label for="full_name_id" class="control-label">API endpoint</label>
+                <input type="text" class="form-control" id="api_endpoint" name="full_name" placeholder="API endpoint">
+            </div>
+
+            <div class="form-group">
+                <!-- Param 1 -->
+                <label for="param_1" class="control-label">Response Code to Simulate</label>
+                <input type="text" class="form-control" id="param_1" name="param1" placeholder="Param1">
+            </div>
+
+            <!--div class="form-group">
+                <!-- Param 2 -->
+                <!--label for="param_2" class="control-label">Param2</label>
+                <input type="text" class="form-control" id="param_2" name="param2" placeholder="Param2">
+            </div>
+
+            <div class="form-group">
+                <!-- Param 3-->
+                <!--label for="param_3" class="control-label">Param3</label>
+                <input type="text" class="form-control" id="param_3" name="param3" placeholder="Param3">
+            </div-->
+
+
+            <div class="form-group">
+                <!-- Buttons -->
+                <button type="button" class="btn btn-primary" onclick="intercept()">Intercept</button>
+				<!--button type="button" class="btn btn-primary" onclick="dereference()">Dereference</button>
+				<button type="button" class="btn btn-primary" onclick="parse()">Parse</button>
+				<button type="button" class="btn btn-primary" onclick="resolve()">Resolve</button>
+				<button type="button" class="btn btn-primary" onclick="middleware()">Middleware</button-->
+            </div>
+        </div>
+
+		<div class="col-lg-6 col-12 col-sm-6 visible-xs visible-sm">
+			<h4>Search Result by API endpoint in swagger</h4>
+		</div>
+		
+        <div class="col-sm-6">
+            <div class="form-group">
+                <textarea class="form-control" id="searchresult"rows="20" style="color:green" readonly></textarea>
+            </div>
+        </div>
+    </div>
+	
+	
+	<div class="row">
+		<div class="col-lg-6 col-12 col-sm-6 hidden-xs">
+			<h4>Swagger file to JSON mapping</h4>
+		</div>
+		<!--div class="col-lg-6 col-12 col-sm-6 hidden-xs">
+			<h4>Swagger file Dereferenced output</h4>
+		</div-->
+		<div class="col-lg-6 col-12 col-sm-6 hidden-xs">
+			<h4>Response code in the given API endpoint</h4>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-lg-6 col-12 col-sm-6 visible-xs">
+			<h4>Swagger file to JSON mapping</h4>
+		</div>
+		<div class="col-lg-6 col-12 col-sm-6">
+			<div class="form-group">
+				<textarea class="form-control" id="swaggerToJSON" rows="20" style="color:blue" readonly></textarea>
+			</div>
+		</div>
+		
+		<!--div class="col-lg-6 col-12 col-sm-6 visible-xs">
+			<h4>Swagger file Dereferenced output</h4>
+		</div-->
+		<div class="col-lg-6 col-12 col-sm-6 visible-xs">
+			<h4>Response code in the given API endpoint</h4>
+		</div>
+		
+		<div class="col-sm-6 col-lg-6 col-12">
+			<div class="form-group">
+				<textarea class="form-control" id="swaggerDereference" rows="20" style="color:red" readonly></textarea>
+			</div>
+		</div>
+	</div>
+	
+	<!--div class="row">
+		<div class="col-lg-6 col-12 col-sm-6 hidden-xs">
+			<h4>Swagger file Parse output</h4>
+		</div>
+		<div class="col-lg-6 col-12 col-sm-6 hidden-xs">
+			<h4>Swagger file Resolved output</h4>
+		</div>
+	</div-->
+	
+	<!--div class="row">
+		<div class="col-lg-6 col-12 col-sm-6 visible-xs">
+			<h4>Swagger file Parse output</h4>
+		</div>
+		<div class="col-lg-6 col-12 col-sm-6">
+			<div class="form-group">
+				<textarea class="form-control" id="swaggerParse" rows="20" style="color:brown" readonly></textarea>
+			</div>
+		</div>
+		
+		<div class="col-lg-6 col-12 col-sm-6 visible-xs">
+			<h4>Swagger file Resolved output</h4>
+		</div>
+		<div class="col-sm-6 col-lg-6 col-12">
+			<div class="form-group">
+				<textarea class="form-control" id="swaggerResolve" rows="20" style="color:purple" readonly></textarea>
+			</div>
+		</div>
+	</div-->
+	
+	
+	
+</div>
+
+
+
+
+<script>
+
+
+	function callAPI(endpoint, id) {
+		var json = {};
+		
+		if ($("textarea#swaggerYAML").val()) {
+			json = {
+				yamlString: $("textarea#swaggerYAML").val(),
+				endpoint: $('input#api_endpoint').val(),
+				type: 'YAMLText'
+			}
+		
+			$.post("/YAMLToJSONObject", json, function() {
+                // successful
+            })
+            .done(function() {})
+            .fail(function() {
+                //document.getElementById("output").innerHTML = "Request Couldn't be completed!! Please retry..";
+            })
+            .always(function(data, error, xhr) {
+				displayOutput(data, id);
+            });
+			
+			
+			$.post(endpoint, json, function() {
+                // successful
+            })
+            .done(function() {})
+            .fail(function() {
+                //document.getElementById("output").innerHTML = "Request Couldn't be completed!! Please retry..";
+            })
+            .always(function(data, error, xhr) {
+				displayOutput(data, id);
+            });
+			
+			
+		} else {
+			json = {
+				filename: $('input.form-control').val(),
+				endpoint: $('input#api_endpoint').val()
+			}
+			$.post(endpoint, json, function() {
+                // successful
+            })
+            .done(function() {})
+            .fail(function() {
+                //document.getElementById("output").innerHTML = "Request Couldn't be completed!! Please retry..";
+            })
+            .always(function(data, error, xhr) {
+				displayOutput(data, id);
+            });
+		}
+		
+		//alert(JSON.stringify(json));
+		
+		
+	}
+
+    function intercept() {
+		callAPI("/intercept", "searchresult");
+    }
+
+	function dereference() {
+		callAPI("/dereference", "swaggerDereference");
+	}
+	
+	function resolve() {
+		callAPI("/resolve", "swaggerResolve");
+	}
+	
+	function parse() {
+		callAPI("/parse", "swaggerParse");
+	}
+	
+	function middleware() {
+		var json = {
+				filename: $('input.form-control').val(),
+				endpoint: $('input#api_endpoint').val()
+			};
+			
+		$.post("/intercept", json, function() {
+			// successful
+		})
+		.done(function() {})
+		.fail(function() {
+			//document.getElementById("output").innerHTML = "Request Couldn't be completed!! Please retry..";
+		})
+		.always(function(data, error, xhr) {
+			console.log(data, "MIDDLEWARE");
+		});
+	}
+	
+	function displayOutput(data, id) {
+		var result = getObject(data.output, $('#api_endpoint').val());
+		var output = "";
+		(id === "searchresult") ? output = (result) ? result : 'Given JSON key not found in swagger JSON' :
+			output = (data) ? data.output : "API call failed";
+		$("textarea#"+id).html(JSON.stringify(output, 0, 4));
+		if (id === "searchresult") {
+			$("#swaggerToJSON").val(JSON.stringify(data.output, 0, 4));
+		}
+		
+		if (id === "swaggerResolve") {
+			var output = (data.output) ? JSON.stringify(output, 0, 4) : data;
+			$("textarea#"+id).val(output);
+			console.log(data);
+		}
+	}
+
+    function getObject(theObject, key) {
+        var result = null;
+        if (theObject instanceof Array) {
+            for (var i = 0; i < theObject.length; i++) {
+                result = getObject(theObject[i], key);
+                if (result) {
+                    break;
+                }
+            }
+        } else {
+            for (var prop in theObject) {
+                if (prop == key) {
+                    return theObject[prop];
+                }
+                if (theObject[prop] instanceof Object || theObject[prop] instanceof Array) {
+                    result = getObject(theObject[prop], key);
+                    if (result) {
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+
+
+    $(function() {
+        // We can attach the `fileselect` event to all file inputs on the page
+        $(document).on('change', ':file', function() {
+            var input = $(this),
+                numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
+
+        // We can watch for our custom `fileselect` event like this
+        $(document).ready(function() {
+            $(':file').on('fileselect', function(event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text'),
+                    log = numFiles > 1 ? numFiles + ' files selected' : label;
+                if (input.length) {
+                    input.val(log);
+                } else {
+                    if (log) alert(log);
+                }
+
+            });
+        });
+    });
+</script>
+
+
