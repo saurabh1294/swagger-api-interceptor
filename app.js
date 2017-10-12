@@ -1,11 +1,9 @@
 /*
-	*File: app.js
-	*Author: Saurabh Gattani
-	*Last Modified: 25th September 2017
-	*Revised on: 25th September 2017
-*/
-
-
+ *File: app.js
+ *Author: Saurabh Gattani
+ *Last Modified: 25th September 2017
+ *Revised on: 25th September 2017
+ */
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
@@ -14,15 +12,20 @@ var YAML = require('yamljs');
 var CircularJSON = require('circular-json');
 var jsBeautify = require('js-beautify');
 var swagger = require('swagger-express-middleware');
-var path       = require('path');
+var path = require('path');
 var port = 8000;
 
-var Middleware      = swagger.Middleware;
+var Middleware = swagger.Middleware;
 var middleware = new Middleware(app);
+var fs = require('fs');
+var util = require('util');
+var http = require('http');
 
 
 app.use(express.static(__dirname));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 
 
 
@@ -116,75 +119,104 @@ console.log("Listening at "+port)
 app.listen(port);*/
 
 
-app.post('/YAMLToJSONObject', function(req, res) 
-{
+app.post('/YAMLToJSONObject', function(req, res) {
 	// parse YAML string
 	//console.log("YAML = ", req.body.yamlString, typeof req.body.yamlString);
-	nativeObject = YAML.parse(req.body.yamlString);
-	res.send({output:nativeObject});
+	var nativeObject = YAML.parse(req.body.yamlString);
+	res.send({
+		output: nativeObject
+	});
 });
 
 
 middleware.init(path.join(__dirname, 'product-offerings-PPV_YAML.yaml'), function(err) {
-  // Enable Express' case-sensitive and strict options
-  // (so "/pets/Fido", "/pets/fido", and "/pets/fido/" are all different)
-  app.enable('case sensitive routing');
-  app.enable('strict routing');
+	// Enable Express' case-sensitive and strict options
+	// (so "/pets/Fido", "/pets/fido", and "/pets/fido/" are all different)
+	app.enable('case sensitive routing');
+	app.enable('strict routing');
 
-  app.use(middleware.metadata());
-  app.use(middleware.files(
-    {
-      // Override the Express App's case-sensitive and strict-routing settings
-      // for the Files middleware.
-      caseSensitive: false,
-      strict: false
-    },
-    {
-      // Serve the Swagger API from "/swagger/api" instead of "/api-docs"
-      apiPath: '/swagger/api',
+	app.use(middleware.metadata());
+	app.use(middleware.files({
+		// Override the Express App's case-sensitive and strict-routing settings
+		// for the Files middleware.
+		caseSensitive: false,
+		strict: false
+	}, {
+		// Serve the Swagger API from "/swagger/api" instead of "/api-docs"
+		apiPath: '/swagger/api',
 
-      // Disable serving the "PetStore.yaml" file
-      rawFilesPath: false
-    }
-  ));
+		// Disable serving the "PetStore.yaml" file
+		rawFilesPath: false
+	}));
 
-  app.use(middleware.parseRequest(
-    {
-      // Configure the cookie parser to use secure cookies
-      cookie: {
-        secret: 'MySuperSecureSecretKey'
-      },
+	app.use(middleware.parseRequest({
+		// Configure the cookie parser to use secure cookies
+		cookie: {
+			secret: 'MySuperSecureSecretKey'
+		},
 
-      // Don't allow JSON content over 100kb (default is 1mb)
-      json: {
-        limit: '100kb'
-      }
-    }
-  ));
+		// Don't allow JSON content over 100kb (default is 1mb)
+		json: {
+			limit: '100kb'
+		}
+	}));
 
-  // These two middleware don't have any options (yet)
-  app.use(
-    middleware.CORS(),
-    middleware.validateRequest()
-  );
+	// These two middleware don't have any options (yet)
+	app.use(
+		middleware.CORS(),
+		middleware.validateRequest()
+	);
 
-  // Add custom middleware
-  app.post('/intercept', function(req, res, next) {
-    console.log("API call to "+req.body.endpoint+" intercepted here");
-  });
+	// Add custom middleware
+	app.post('/intercept', function(req, res, next) {
 
-  
 
-  // Add a custom error handler that returns errors as HTML
-  app.use(function(err, req, res, next) {
-    res.status(err.status);
-    res.type('html');
-    res.send(util.format('<html><body><h1>%d Error!</h1><p>%s</p></body></html>', err.status, err.message));
-  });
+		if (req.body.type === 'YAMLText') {
+			var nativeObject = YAML.parse(req.body.yamlString);
+			//res.send({output:nativeObject});
+			SwaggerParser.bundle(nativeObject).then(function(api) {
+				//console.log("Intercepting Swagger to JSON bundle", api);
+				res.send({
+					output: api
+				});
+			});
+		} else {
+			SwaggerParser.bundle(req.body.filename).then(function(api) {
+				//console.log("Intercepting Swagger to JSON bundle", api);
+				res.send({
+					output: api
+				});
+			});
+		}
+		//callAPI(req.body.endpoint);
 
-  app.listen(8000, function() {
-    console.log('The Swagger Interceptor is now running at http://localhost:8000');
-  });
+
+		app.use(req.body.endpoint, function(req, res, next) {
+			console.log("API call to " + req.body.endpoint + " intercepted here");
+			// this might be replaced with actual API call and it's reponse
+			var obj = JSON.parse(fs.readFileSync('user-payperview-offers.json', 'utf8'));
+			console.log("returning response from endpoint : ", req.body.endpoint);
+			res.send({
+				response: obj
+			});
+		});
+
+
+	});
+
+
+
+	// Add a custom error handler that returns errors as HTML
+	app.use(function(err, req, res, next) {
+		//res.status(err.status);
+		//res.type('html');
+		//res.send(util.format('<html><body><h1>%d Error!</h1><p>%s</p></body></html>', err.status, err.message));
+		res.send({
+			response: err.message
+		});
+	});
+
+	app.listen(8000, function() {
+		console.log('The Swagger Interceptor is now running at http://localhost:8000');
+	});
 });
-
-

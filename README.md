@@ -19,3 +19,5 @@ Then from your project directory, fire the below commands
 6) npm install circular-json
 
 7) npm install swagger-express-middleware
+
+8) npm install util
