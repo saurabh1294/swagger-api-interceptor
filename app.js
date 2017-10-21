@@ -28,100 +28,8 @@ app.use(bodyParser.urlencoded({
 }));
 
 
-
-/*app.post('/intercept', function(req, res) 
-{
-	if (req.body.type === 'YAMLText') {
-		nativeObject = YAML.parse(req.body.yamlString);
-		//res.send({output:nativeObject});
-		SwaggerParser.bundle(nativeObject).then(function(api) {
-			//console.log("Intercepting Swagger to JSON bundle", api);
-			res.send({output:api});
-		});
-	} else {
-		SwaggerParser.bundle(req.body.filename).then(function(api) {
-			//console.log("Intercepting Swagger to JSON bundle", api);
-			res.send({output:api});
-		});
-	}
-});
-
-
-
-
-app.post('/parse', function(req, res) 
-{
-	if (req.body.type === 'YAMLText') {
-		nativeObject = YAML.parse(req.body.yamlString);
-		//res.send({output:nativeObject});
-		SwaggerParser.parse(nativeObject).then(function(api) {
-			//console.log("Intercepting Swagger to JSON bundle", api);
-			res.send({output:api});
-		});
-	} else {
-		SwaggerParser.parse(req.body.filename).then(function(data) {
-			//console.log("Parsed swagger : ", data);
-			res.send({output:data});
-		});
-	}
-});
-
-app.post('/dereference', function(req, res) 
-{
-	if (req.body.type === 'YAMLText') {
-		nativeObject = YAML.parse(req.body.yamlString);
-		//res.send({output:nativeObject});
-		SwaggerParser.dereference(nativeObject).then(function(api) {
-			//console.log("Intercepting Swagger to JSON bundle", api);
-			res.send({output:api});
-		});
-	} else {
-		SwaggerParser.dereference(req.body.filename).then(function(data) {
-		//console.log("Dereferenced swagger : ", data);
-		res.send({output:data});
-		});
-	}
-});
-
-app.post('/resolve', function(req, res) 
-{
-	if (req.body.type === 'YAMLText') {
-		nativeObject = YAML.parse(req.body.yamlString);
-		//res.send({output:nativeObject});
-		SwaggerParser.resolve(nativeObject).then(function(data) {
-			var serialized = CircularJSON.stringify(data);
-			//console.log("Resolved swagger : ", data, serialized);
-			res.send(jsBeautify.js_beautify(serialized));
-		});
-	} else {
-		SwaggerParser.resolve(req.body.filename).then(function(data) {
-			var serialized = CircularJSON.stringify(data);
-			//console.log("Resolved swagger : ", data, serialized);
-			res.send(jsBeautify.js_beautify(serialized));
-		});
-	}
-});
-
-app.post('/YAMLToJSONObject', function(req, res) 
-{
-	// parse YAML string
-	//console.log("YAML = ", req.body.yamlString, typeof req.body.yamlString);
-	nativeObject = YAML.parse(req.body.yamlString);
-	res.send({output:nativeObject});
-});
-
-app.get('/', function(req, res) 
-{
-    res.sendfile("./index.html");
-});
-
-console.log("Listening at "+port)
-app.listen(port);*/
-
-
 app.post('/YAMLToJSONObject', function(req, res) {
 	// parse YAML string
-	//console.log("YAML = ", req.body.yamlString, typeof req.body.yamlString);
 	var nativeObject = YAML.parse(req.body.yamlString);
 	res.send({
 		output: nativeObject
@@ -145,19 +53,19 @@ middleware.init(path.join(__dirname, 'product-offerings-PPV_YAML.yaml'), functio
 		// Serve the Swagger API from "/swagger/api" instead of "/api-docs"
 		apiPath: '/swagger/api',
 
-		// Disable serving the "PetStore.yaml" file
+		// Disable serving the "swagger .yaml" file
 		rawFilesPath: false
 	}));
 
 	app.use(middleware.parseRequest({
 		// Configure the cookie parser to use secure cookies
 		cookie: {
-			secret: 'MySuperSecureSecretKey'
+			secret: 'FOSSSecretKey'
 		},
 
-		// Don't allow JSON content over 100kb (default is 1mb)
+		// Don't allow JSON content over 1024kb (default is 1mb)
 		json: {
-			limit: '100kb'
+			limit: '1024kb'
 		}
 	}));
 
@@ -168,42 +76,82 @@ middleware.init(path.join(__dirname, 'product-offerings-PPV_YAML.yaml'), functio
 	);
 
 	// Add custom middleware
-	app.post('/intercept', function(req, res, next) {
-
-
+	app.post('/api*', function(req, res, next) {
 		if (req.body.type === 'YAMLText') {
 			var nativeObject = YAML.parse(req.body.yamlString);
-			//res.send({output:nativeObject});
 			SwaggerParser.bundle(nativeObject).then(function(api) {
-				//console.log("Intercepting Swagger to JSON bundle", api);
 				res.send({
 					output: api
 				});
 			});
 		} else {
 			SwaggerParser.bundle(req.body.filename).then(function(api) {
-				//console.log("Intercepting Swagger to JSON bundle", api);
 				res.send({
 					output: api
 				});
 			});
 		}
-		//callAPI(req.body.endpoint);
 
+		
 
 		app.use(req.body.endpoint, function(req, res, next) {
-			console.log("API call to " + req.body.endpoint + " intercepted here");
+			console.log("API call to " + req.body.endpoint + " intercepted here", req.originalUrl);
 			// this might be replaced with actual API call and it's reponse
-			var obj = JSON.parse(fs.readFileSync('user-payperview-offers.json', 'utf8'));
-			console.log("returning response from endpoint : ", req.body.endpoint);
-			res.send({
-				response: obj
-			});
+			var json = '';
+			switch(req.originalUrl.split('/')[1]) {
+				case 'pay-per-view':
+					json = 'user-payperview-offers.json';
+					res.send({
+						response: callAPI(json)
+					});
+					break;
+					
+				case 'account':
+					json = 'account.json';
+					res.send({
+						response: callAPI(json)
+					});
+					break;
+				
+				default:
+					res.send("Error/API doesn't exist");
+					break;
+			}
 		});
 
 
 	});
+	
+	app.get('/api*', function (req, res, next) {
+		next();
+	}, function (req, res, next) {
+		//console.log('URL path', req.url, req.url.substr(req.url.lastIndexOf('/') + 1));
+		var json = '';
+		switch(req.url.substr(req.url.lastIndexOf('/') + 1)) {
+			case 'pay-per-view':
+				json = 'user-payperview-offers.json';
+				res.send({
+					response: callAPI(json)
+				});
+				break;
+				
+			case 'account':
+				json = 'account.json';
+				res.send({
+					response: callAPI(json)
+				});
+				break;
+				
+			default:
+				res.send("Error/API doesn't exist");
+				break;
+		}	
+	});
 
+	function callAPI(json) {
+		var obj = JSON.parse(fs.readFileSync(json, 'utf8'));
+		return obj;
+	}
 
 
 	// Add a custom error handler that returns errors as HTML
@@ -216,7 +164,8 @@ middleware.init(path.join(__dirname, 'product-offerings-PPV_YAML.yaml'), functio
 		});
 	});
 
-	app.listen(8000, function() {
-		console.log('The Swagger Interceptor is now running at http://localhost:8000');
+	app.listen(port, function() {
+		console.log('The Swagger Interceptor is now running at http://localhost:'+port);
 	});
 });
+

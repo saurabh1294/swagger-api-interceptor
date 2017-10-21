@@ -245,39 +245,9 @@
 	}
 
 	function intercept() {
-		callAPI("/intercept", "searchresult");
+		callAPI("/api/pay-per-view", "searchresult");
 		callAPI($("#api_endpoint").val(), "swaggerAPIEndPointResponse");
 	}
-
-	/*function dereference() {
-		callAPI("/dereference", "swaggerAPIEndPointResponse");
-	}
-	
-	function resolve() {
-		callAPI("/resolve", "swaggerResolve");
-	}
-	
-	function parse() {
-		callAPI("/parse", "swaggerParse");
-	}
-	
-	function middleware() {
-		var json = {
-				filename: $('input.form-control').val(),
-				endpoint: $('input#api_endpoint').val()
-			};
-			
-		$.post("/intercept", json, function() {
-			// successful
-		})
-		.done(function() {})
-		.fail(function() {
-			//document.getElementById("output").innerHTML = "Request Couldn't be completed!! Please retry..";
-		})
-		.always(function(data, error, xhr) {
-			console.log(data, "MIDDLEWARE");
-		});
-	}*/
 
 	function extractResponseCode(json) {
 		//callAPI($("#api_endpoint").val(), "swaggerAPIEndPointResponse");
